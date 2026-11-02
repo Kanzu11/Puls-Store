@@ -1,4 +1,5 @@
 import React from 'react';
+import { Shield } from 'lucide-react';
 import { Providers } from '@/components/Providers';
 import { Navbar } from '@/components/Navbar';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -137,6 +138,17 @@ export default function App() {
                 <span>Terms of Sale</span>
                 <span>•</span>
                 <span>Shipping & Returns</span>
+                <a
+                  href="https://t.me/pulsestorbot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Admin Telegram Bot"
+                  aria-label="Open PulseStore Admin Telegram Bot"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:text-[#ea580c] hover:border-[#ea580c] transition-colors"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="text-[11px] font-semibold">Admin</span>
+                </a>
               </div>
             </div>
           </footer>
