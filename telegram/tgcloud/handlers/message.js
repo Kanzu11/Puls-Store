@@ -1,8 +1,6 @@
 import { api, fetch } from 'sdk';
 
-const NEON_DATABASE_URL = globalThis.process?.env?.DATABASE_URL || '';
-const NEON_HTTP_URL = globalThis.process?.env?.NEON_HTTP_URL || '';
-const WEB_APP_URL = globalThis.process?.env?.NEXT_PUBLIC_TMA_URL || '';
+import { NEON_DATABASE_URL, NEON_HTTP_URL, WEB_APP_URL } from '../lib/config.js';
 
 async function queryNeon(sql, params = []) {
   const res = await fetch(NEON_HTTP_URL, {

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "node scripts/sync-env.mjs && vite",
+    "build": "node scripts/sync-env.mjs && tsc && vite build",
     "preview": "vite preview",
     "deploy": "npm run build && npx @tgcloud/cli push --force",
     "push": "npm run build && npx @tgcloud/cli push --force",
