@@ -1,0 +1,31 @@
+{
+  "name": "pulsestore",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client",
+    "telegram"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n \"SERVER,CLIENT\" -c \"blue.bold,green.bold\" \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:all": "concurrently -k -n \"SERVER,CLIENT,TELEGRAM\" -c \"blue.bold,green.bold,magenta.bold\" \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:telegram\"",
+    "dev:server": "npm --workspace=server run dev",
+    "dev:client": "npm --workspace=client run dev",
+    "dev:telegram": "npm --workspace=telegram run dev",
+    "build": "npm --workspace=server run db:generate && npm run build:apps",
+    "build:apps": "concurrently \"npm --workspace=server run build\" \"npm --workspace=client run build\" \"npm --workspace=telegram run build\"",
+    "db:generate": "npm --workspace=server run db:generate",
+    "db:push": "npm --workspace=server run db:push",
+    "db:seed": "npm --workspace=server run db:seed",
+    "db:studio": "npm --workspace=server run db:studio",
+    "telegram:deploy": "npm --workspace=telegram run deploy",
+    "push": "npm --workspace=telegram run deploy"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

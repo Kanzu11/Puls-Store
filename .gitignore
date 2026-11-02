@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables & secrets (Never commit)
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Telegram Serverless credentials & local cache
+.tgcloud/
+**/.tgcloud/
+
+# Build outputs
+dist/
+**/dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Prisma & OS artifacts
+prisma/generated/
+**/generated/prisma/
+.DS_Store
+Thumbs.db
