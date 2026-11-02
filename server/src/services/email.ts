@@ -12,6 +12,10 @@ function getTransporter() {
 }
 
 const FROM_EMAIL = `"PulseStore" <${process.env.EMAIL_USER || 'no-reply@pulsestore.local'}>`;
+const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://puls-store.vercel.app').replace(
+  /\/+$/,
+  ''
+);
 
 export async function sendWelcomeEmail(to: string, name: string): Promise<void> {
   try {
@@ -30,7 +34,7 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
           <p style="font-size: 14px; color: #52525b; line-height: 1.6; margin: 0 0 24px;">
             Your PulseStore account has been created. You can now shop our curated collection of precision hardware, acoustic gear, and minimalist workspace essentials, and track all orders directly from your account.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/products" style="display: inline-block; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
+          <a href="${APP_URL}/products" style="display: inline-block; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
             Explore Collection
           </a>
           <p style="font-size: 11px; color: #a1a1aa; margin-top: 32px; border-top: 1px solid #f4f4f5; padding-top: 16px;">
@@ -93,7 +97,7 @@ export async function sendOrderConfirmationEmail(order: {
               <td style="padding-top: 12px; font-size: 16px; font-family: monospace; font-weight: 700; text-align: right;">$${Number(order.total).toFixed(2)}</td>
             </tr>
           </table>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders?order=${order.orderNumber}" style="display: inline-block; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
+          <a href="${APP_URL}/orders?order=${order.orderNumber}" style="display: inline-block; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
             Track Order Status
           </a>
         </div>
@@ -124,7 +128,7 @@ export async function sendOrderStatusEmail(order: {
           <p style="font-size: 14px; color: #52525b; line-height: 1.6;">
             Hi ${order.customerName}, your order <strong>${order.orderNumber}</strong> status has been updated to <strong>${order.status}</strong>.
           </p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/orders?order=${order.orderNumber}" style="display: inline-block; margin-top: 16px; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
+          <a href="${APP_URL}/orders?order=${order.orderNumber}" style="display: inline-block; margin-top: 16px; background: #09090b; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 600;">
             View Live Order Status
           </a>
         </div>

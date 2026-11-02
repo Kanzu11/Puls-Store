@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim();
+const defaultApiUrl =
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? 'https://puls-store.onrender.com'
+    : 'http://localhost:5000';
+
+const rawApiUrl = (import.meta.env.VITE_API_URL || defaultApiUrl).trim();
 // Normalize trailing slashes or /api suffix so Vercel env vars work in any format
 export const API_BASE_URL = rawApiUrl.replace(/\/+$/, '').replace(/\/api$/, '');
 

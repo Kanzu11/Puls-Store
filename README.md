@@ -2,6 +2,10 @@
 
 Full-stack e-commerce storefront and real-time Telegram operations suite built with **React**, **TypeScript**, **Node.js**, **Express**, **Prisma**, **PostgreSQL**, and **Telegram Mini Apps**.
 
+- **Live Web Storefront**: [https://puls-store.vercel.app](https://puls-store.vercel.app/)
+- **Backend API**: [https://puls-store.onrender.com](https://puls-store.onrender.com/health)
+- **Telegram Admin Bot**: [@pulsestorbot](https://t.me/pulsestorbot)
+
 ---
 
 ## Interface Preview
