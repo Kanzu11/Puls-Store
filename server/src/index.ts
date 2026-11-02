@@ -16,6 +16,7 @@ import { productsRouter } from './routes/products.js';
 import { categoriesRouter } from './routes/categories.js';
 import { ordersRouter } from './routes/orders.js';
 import { adminRouter } from './routes/admin.js';
+import { prisma } from './db/index.js';
 import {
   securityHeaders,
   sanitizeInputs,
@@ -62,9 +63,16 @@ app.use((req, _res, next) => {
 });
 
 // Root & Health check endpoints (for Render health probes)
-const healthHandler = (_req: express.Request, res: express.Response) => {
+const healthHandler = async (_req: express.Request, res: express.Response) => {
+  let dbStatus = 'connected';
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (err: any) {
+    dbStatus = `error: ${err?.code || err?.message?.split('\n').pop() || 'unavailable'}`;
+  }
   res.json({
     status: 'ok',
+    database: dbStatus,
     service: 'PulseStore Node.js Backend API + Prisma DB',
     security: 'Helmet Headers + Sliding-Window Rate Limiter Active',
     timestamp: new Date().toISOString(),

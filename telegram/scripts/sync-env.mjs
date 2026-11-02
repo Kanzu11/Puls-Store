@@ -27,10 +27,8 @@ const rootEnv = parseEnv(rootEnvPath);
 const tgEnv = parseEnv(envPath);
 
 const dbUrl = tgEnv.VITE_NEON_DATABASE_URL || rootEnv.DATABASE_URL || '';
-const httpUrl =
-  tgEnv.VITE_NEON_HTTP_URL || 'https://ep-red-night-b52t1wpd.c-7.us-east-2.aws.neon.tech/sql';
-const webAppUrl =
-  tgEnv.VITE_WEB_APP_URL || rootEnv.NEXT_PUBLIC_TMA_URL || 'https://app9220334330.tgcloud.ai/';
+const httpUrl = tgEnv.VITE_NEON_HTTP_URL || '';
+const webAppUrl = tgEnv.VITE_WEB_APP_URL || rootEnv.NEXT_PUBLIC_TMA_URL || '';
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(
