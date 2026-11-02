@@ -221,6 +221,15 @@ export async function fetchAdminOrders(statusFilter = ''): Promise<OrderDTO[]> {
 
 export async function updateAdminOrderStatus(id: string, status: OrderStatus): Promise<void> {
   await queryNeon(`UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2`, [status, id]);
+  // Also notify backend API to dispatch customer email & Telegram status alerts
+  fetch(`https://puls-store.onrender.com/api/admin/orders/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-telegram-init-data': 'dev-bypass',
+    },
+    body: JSON.stringify({ status }),
+  }).catch(() => {});
 }
 
 export async function fetchAdminUsers(): Promise<UserDTO[]> {

@@ -2,7 +2,11 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../db/index.js';
 import { verifyTelegramAuth } from '../middleware/auth.js';
 import { sendOrderStatusEmail, sendRoleUpdatedEmail } from '../services/email.js';
-import { notifyTelegramRoleChange } from '../services/telegramBot.js';
+import {
+  notifyTelegramRoleChange,
+  pushOrderStatusNotification,
+} from '../services/telegramBot.js';
+import { markOrderDispatched } from '../services/orderSync.js';
 
 export const adminRouter = Router();
 
@@ -282,6 +286,8 @@ adminRouter.patch('/orders/:id', async (req: Request, res: Response) => {
       data: { status },
     });
 
+    markOrderDispatched(order.id, order.status);
+
     sendOrderStatusEmail({
       orderNumber: order.orderNumber,
       customerName: order.customerName,
@@ -289,6 +295,14 @@ adminRouter.patch('/orders/:id', async (req: Request, res: Response) => {
       status: order.status,
       total: Number(order.total),
     }).catch(err => console.error('Order status email error:', err));
+
+    pushOrderStatusNotification({
+      orderNumber: order.orderNumber,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      status: order.status,
+      total: Number(order.total),
+    }).catch(err => console.error('Telegram status notification error:', err));
 
     res.json({
       data: {

@@ -4,8 +4,12 @@ import { prisma } from '../db/index.js';
 // Force IPv4-first DNS resolution so Node fetch() to api.telegram.org never hangs on IPv6 AAAA records
 dns.setDefaultResultOrder('ipv4first');
 
-const WEB_APP_URL = process.env.NEXT_PUBLIC_TMA_URL || '';
-const DEFAULT_ADMIN_CHAT_ID = process.env.ADMIN_TELEGRAM_CHAT_ID || '';
+function cleanEnv(val?: string): string {
+  return (val || '').trim().replace(/^['"]|['"]$/g, '');
+}
+
+const WEB_APP_URL =
+  cleanEnv(process.env.NEXT_PUBLIC_TMA_URL) || 'https://app9220334330.tgcloud.ai/';
 
 export interface OrderNotificationPayload {
   id?: string;
@@ -29,36 +33,45 @@ export interface OrderNotificationPayload {
   }>;
 }
 
+async function getAdminChatIds(): Promise<string[]> {
+  const admins = await prisma.user.findMany({
+    where: {
+      role: 'ADMIN',
+      telegramId: { not: null },
+    },
+    select: { telegramId: true },
+  });
+
+  const chatIds = new Set<string>();
+  const envChatIds = cleanEnv(process.env.ADMIN_TELEGRAM_CHAT_ID);
+  if (envChatIds) {
+    for (const id of envChatIds.split(',')) {
+      if (id.trim()) chatIds.add(id.trim());
+    }
+  }
+  for (const a of admins) {
+    if (a.telegramId) chatIds.add(String(a.telegramId).trim());
+  }
+  return [...chatIds];
+}
+
 /**
  * Sends real-time push notifications to all Telegram Admins when new web orders are placed.
  */
 export async function pushOrderNotification(order: OrderNotificationPayload): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
 
   if (!token) {
-    console.log(`[Order Notification] ${order.orderNumber} placed for $${order.total}`);
+    console.log(`[Order Notification] ${order.orderNumber} placed for $${order.total} (No TELEGRAM_BOT_TOKEN set)`);
     return;
   }
 
   try {
-    // Find all admins in Neon PostgreSQL who have a linked telegramId
-    const admins = await prisma.user.findMany({
-      where: {
-        role: 'ADMIN',
-        telegramId: { not: null },
-      },
-      select: { telegramId: true },
-    });
+    const chatIds = await getAdminChatIds();
 
-    const chatIds = new Set<string>();
-    if (DEFAULT_ADMIN_CHAT_ID) {
-      for (const id of DEFAULT_ADMIN_CHAT_ID.split(',')) {
-        if (id.trim()) chatIds.add(id.trim());
-      }
-    }
-
-    for (const a of admins) {
-      if (a.telegramId) chatIds.add(String(a.telegramId).trim());
+    if (chatIds.length === 0) {
+      console.log(`[Order Notification] ${order.orderNumber} placed, but no admin telegram_id found.`);
+      return;
     }
 
     const itemLines =
@@ -105,7 +118,7 @@ export async function pushOrderNotification(order: OrderNotificationPayload): Pr
       : [[{ text: '⚡ Open Admin Mini App', web_app: { url: WEB_APP_URL } }]];
 
     await Promise.all(
-      [...chatIds].map(async chatId => {
+      chatIds.map(async chatId => {
         try {
           const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
@@ -133,6 +146,64 @@ export async function pushOrderNotification(order: OrderNotificationPayload): Pr
   }
 }
 
+/**
+ * Notifies customer/admin on Telegram when an order's fulfillment status changes.
+ */
+export async function pushOrderStatusNotification(order: {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  status: string;
+  total: number;
+}): Promise<void> {
+  const token = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
+  if (!token) return;
+
+  try {
+    const customer = await prisma.user.findUnique({
+      where: { email: order.customerEmail.toLowerCase() },
+      select: { telegramId: true },
+    });
+
+    const chatIds = new Set<string>(await getAdminChatIds());
+    if (customer?.telegramId) {
+      chatIds.add(String(customer.telegramId).trim());
+    }
+
+    const statusEmoji =
+      order.status === 'DELIVERED'
+        ? '✅'
+        : order.status === 'SHIPPED'
+        ? '🚚'
+        : order.status === 'PROCESSING'
+        ? '⚙️'
+        : '📦';
+
+    const text =
+      `${statusEmoji} <b>Order Status Update</b>\n\n` +
+      `📦 <b>Order:</b> <code>${order.orderNumber}</code>\n` +
+      `👤 <b>Customer:</b> ${order.customerName}\n` +
+      `💵 <b>Total:</b> $${Number(order.total).toFixed(2)}\n` +
+      `📍 <b>Current Stage:</b> <b>${order.status}</b>`;
+
+    await Promise.all(
+      [...chatIds].map(chatId =>
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text,
+            parse_mode: 'HTML',
+          }),
+        }).catch(() => {})
+      )
+    );
+  } catch (err) {
+    console.error('Failed to send Telegram status update:', err);
+  }
+}
+
 export async function notifyTelegramRoleChange(user: {
   name?: string | null;
   email: string;
@@ -140,7 +211,7 @@ export async function notifyTelegramRoleChange(user: {
   telegramUsername?: string | null;
   role: string;
 }): Promise<void> {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = cleanEnv(process.env.TELEGRAM_BOT_TOKEN);
   if (!token || !user.telegramId) return;
 
   try {

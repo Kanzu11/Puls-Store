@@ -17,6 +17,7 @@ import { categoriesRouter } from './routes/categories.js';
 import { ordersRouter } from './routes/orders.js';
 import { adminRouter } from './routes/admin.js';
 import { prisma } from './db/index.js';
+import { startOrderNotificationWatcher } from './services/orderSync.js';
 import {
   securityHeaders,
   sanitizeInputs,
@@ -96,6 +97,7 @@ app.use('/api/admin', adminRouter);
 // Start server with automatic port conflict recovery
 const server = app.listen(PORT, () => {
   console.log(`🚀 PulseStore Server (API + Prisma DB + Email + Telegram Push) running on http://localhost:${PORT}`);
+  startOrderNotificationWatcher();
 });
 
 server.on('error', (err: any) => {

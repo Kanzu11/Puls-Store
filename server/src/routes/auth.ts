@@ -193,12 +193,6 @@ authRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
     const authUser = (req as any).user;
     const user = await prisma.user.findUnique({
       where: { id: authUser.userId },
-      include: {
-        orders: {
-          orderBy: { createdAt: 'desc' },
-          include: { items: { include: { product: true } } },
-        },
-      },
     });
 
     if (!user) {
@@ -206,7 +200,15 @@ authRouter.get('/me', requireAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const orders = user.orders.map(o => ({
+    const userOrders = await prisma.order.findMany({
+      where: {
+        OR: [{ userId: user.id }, { customerEmail: user.email.toLowerCase() }],
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { items: { include: { product: true } } },
+    });
+
+    const orders = userOrders.map(o => ({
       ...o,
       total: Number(o.total),
       createdAt: o.createdAt.toISOString(),

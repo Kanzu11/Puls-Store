@@ -3,6 +3,7 @@ import { prisma } from '../db/index.js';
 import type { CheckoutPayload } from '../types/index.js';
 import { pushOrderNotification } from '../services/telegramBot.js';
 import { sendOrderConfirmationEmail } from '../services/email.js';
+import { markOrderDispatched } from '../services/orderSync.js';
 import { verifyJwtToken } from '../middleware/auth.js';
 import { checkoutLimiter } from '../middleware/security.js';
 
@@ -103,6 +104,8 @@ ordersRouter.post('/', checkoutLimiter, async (req: Request, res: Response) => {
 
       return newOrder;
     });
+
+    markOrderDispatched(order.id, order.status);
 
     // Asynchronously dispatch real-time push notification to Telegram Admins
     pushOrderNotification({
