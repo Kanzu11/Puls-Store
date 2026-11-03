@@ -1,0 +1,44 @@
+name: PulseStore CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-verify:
+    name: Build & Typecheck (Server, Client, Telegram)
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pulsestore?schema=public
+      JWT_SECRET: ci_test_jwt_secret
+      VITE_API_URL: https://puls-store.onrender.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Prisma Client & Build Backend (server)
+        run: npm --workspace=server run build
+
+      - name: Typecheck & Build Web Storefront (client)
+        run: npm --workspace=client run build
+
+      - name: Typecheck & Build Telegram Mini App (telegram)
+        run: npm --workspace=telegram run build
